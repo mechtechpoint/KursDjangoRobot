@@ -1,0 +1,146 @@
+{% extends "bot_motion/base.html" %}
+
+{% block title %}
+Sterowanie robotem
+{% endblock %}
+{% load static %}
+{% block content %}
+<style>
+    .btn-xl {
+        padding: 20px 40px;
+        font-size: 24px;
+    }
+    h2, h3 {
+        font-size: 1.5rem;
+    }
+    .full-height {
+        min-height: 100vh;
+    }
+    body {
+        background-color: #f2f2f2; /* Lekko szary kolor */
+    }
+</style>
+
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+    <h2 class="mb-5">Aplikacja do sterowania robotem</h2>
+    
+    <!-- Formularz sterowania silnikiem -->
+    <div class="mb-5">
+        <form id="engineControlForm" method="post" class="d-flex gap-4 justify-content-center">
+            {% csrf_token %}
+            <button type="button" onclick="startEngine('go')" class="btn btn-primary btn-xl">GO</button>
+            <button type="button" onclick="startEngine('back')" class="btn btn-primary btn-xl">BACK</button>
+            <button type="button" onclick="startEngine('left')" class="btn btn-primary btn-xl">LEFT</button>
+            <button type="button" onclick="startEngine('right')" class="btn btn-primary btn-xl">RIGHT</button>
+            <button type="button" onclick="stopEngine()" class="btn btn-danger btn-xl">STOP</button>
+        </form>
+    </div>
+
+    <!-- Kontrola czujnika HC-SR04 -->
+    <div class="mb-5">
+        <h3 class="mb-4">Kontrola czujnika HC-SR04</h3>
+        <form id="sensorControlForm" method="post" class="d-flex gap-4 justify-content-center align-items-center">
+            {% csrf_token %}
+            <button type="button" onclick="startSensor()" class="btn btn-success btn-xl">ON HC-SR04</button>
+            <button type="button" onclick="stopSensor()" class="btn btn-danger btn-xl">OFF HC-SR04</button>
+            <!-- Ikona światła -->
+            <i id="sensorStatusIcon" class="bi bi-lightbulb-fill" style="font-size: 36px; color: gray;"></i>
+        </form>
+    </div>
+
+    <!-- Kontrola silników dolnych -->
+    <div class="mb-5">
+        <h3 class="mb-4">Kontrola silników dolnych</h3>
+        <form id="pin3ControlForm" method="post" class="d-flex gap-4 justify-content-center align-items-center">
+            {% csrf_token %}
+            <button type="button" onclick="turnOnPin3()" class="btn btn-success btn-xl">ON scythe</button>
+            <button type="button" onclick="turnOffPin3()" class="btn btn-danger btn-xl">OFF scythe</button>
+            <!-- Ikona światła dla silników dolnych -->
+<!--
+            <i id="pin3StatusIcon" class="bi bi-lightbulb-fill" style="font-size: 36px; color: gray;"></i>
+-->
+        </form>
+    </div><br>
+<div class="mb-5">
+    <h3 class="mb-4">Zrób zdjęcie</h3>
+    <form id="photoForm" method="post" class="d-flex gap-4 justify-content-center align-items-center">
+        {% csrf_token %}
+        <button type="button" onclick="takePhoto()" class="btn btn-info btn-xl">Picture</button>
+    </form>
+    <img id="photoDisplay" src="{% static 'bot_motion/photo.jpg' %}" alt="Zdjęcie z robota" style="max-width: 100%; margin-top: 20px;">
+</div>
+
+
+</div>
+
+
+
+<script>
+function startEngine(direction) {
+    const form = document.getElementById('engineControlForm');
+    form.action = `/${direction}/`;
+    form.submit();
+}
+
+function stopEngine() {
+    const form = document.getElementById('engineControlForm');
+    form.action = '/stop/';
+    form.submit();
+}
+
+function updateLightStatusIcon(iconId, status) {
+    const icon = document.getElementById(iconId);
+    if (status === 'on') {
+        icon.style.color = 'yellow';
+    } else {
+        icon.style.color = 'gray';
+    }
+}
+
+
+function startSensor() {
+    const form = document.getElementById('sensorControlForm');
+    form.action = '/start_sensor/';  // Tutaj musisz dodać odpowiednią ścieżkę URL dla uruchomienia czujnika
+    form.submit();
+    updateLightStatusIcon('sensorStatusIcon', 'on');
+}
+
+function stopSensor() {
+    const form = document.getElementById('sensorControlForm');
+    form.action = '/stop_sensor/';  // Tutaj musisz dodać odpowiednią ścieżkę URL dla zatrzymania czujnika
+    form.submit();
+    updateLightStatusIcon('sensorStatusIcon', 'off');
+}
+
+
+function turnOnPin3() {
+    const form = document.getElementById('pin3ControlForm');
+    form.action = '/turn_on_pin3/';
+    form.submit();
+    updateLightStatusIcon('pin3StatusIcon', 'on');
+}
+
+function turnOffPin3() {
+    const form = document.getElementById('pin3ControlForm');
+    form.action = '/turn_off_pin3/';
+    form.submit();
+    updateLightStatusIcon('pin3StatusIcon', 'off');
+}
+function takePhoto() {
+    fetch('/take_photo/')
+    .then(response => {
+        if (response.status === 204) {
+            const photoDisplay = document.getElementById('photoDisplay');
+            const currentTime = new Date().getTime();
+
+            // Dodajemy parametr czasowy do URL, aby wymusić ponowne załadowanie obrazu (i uniknąć cache'owania)
+            photoDisplay.src = "{% static 'bot_motion/photo.jpg' %}" + '?t=' + currentTime;
+        }
+    })
+    .catch(error => {
+        console.error('Wystąpił błąd podczas wykonywania zdjęcia:', error);
+    });
+}
+</script>
+
+{% endblock %}

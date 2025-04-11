@@ -1,0 +1,52 @@
+from django.shortcuts import render
+from django.http import JsonResponse
+import threading
+import subprocess
+from django.http import HttpResponse
+from .led_blinker import start_engine, stop_engine, active_thread, onsilnikidolne, offsilnikidolne
+from .sterowanie_pinem import initiate_sensor
+from .alertPIN import alert,stop_alert
+alert_thread = None
+
+def index(request):
+    return render(request, 'bot_motion/index.html')
+
+def go(request):
+    start_engine("go")
+    return HttpResponse(status=204)
+
+def back(request):
+    start_engine("back")
+    return HttpResponse(status=204)
+
+def left(request):
+    start_engine("left")
+    return HttpResponse(status=204)
+
+def right(request):
+    start_engine("right")
+    return HttpResponse(status=204)
+
+def stop(request):
+    stop_engine()
+    return HttpResponse(status=204)
+    
+def startsensor(request):
+    print("start sensor")
+
+    return HttpResponse(status=204)
+
+def stopsensor(request):
+    print("stop sensor")
+
+    
+    return HttpResponse(status=204)
+    
+
+def turn_on_pin3(request):
+    onsilnikidolne()
+    return HttpResponse(status=204)
+
+def turn_off_pin3(request):
+    offsilnikidolne()
+    return HttpResponse(status=204)
